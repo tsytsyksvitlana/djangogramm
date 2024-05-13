@@ -1,0 +1,75 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block nav %}
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'feed' %}">Feed</a>
+    </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'home' %}">Home</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'add_post' %}">New Post</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'edit_profile' %}">Edit Profile</a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="{% url 'logout' %}" style="color: red">Logout</a>
+      </li>
+    </ul>
+  </div>
+{% endblock %}
+
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-3">
+            {% if user.avatar %}
+                <img src="{{ user.avatar.url }}" alt="avatar" class="img-fluid rounded-circle" style="object-fit: cover; width: 15em; height: 15em;">
+            {% else %}
+                <img src="{% static 'avatars/default_avatar.jpg' %}" alt="default avatar" class="img-fluid rounded-circle" style="object-fit: cover; width: 15em; height: 15em;">
+            {% endif %}
+        </div>
+        <div class="col-md-9">
+            <h1>@{{ user.get_username }}</h1>
+            <p>{{ user.bio }}</p>
+            <h6>Followers: {{ user.get_followers_count }}</h6>
+            <h6>Following: {{ user.get_following_count }}</h6>
+        </div>
+    </div>
+    <div class="container mt-5">
+      <div class="row">
+          {% for post in object_list %}
+          <div class="col-md-4 mb-4">
+                  <div class="card" style="height: 100%;">
+                      {% if post.get_images_for_post.all %}
+                      {% with image=post.get_images_for_post.first %}
+                      {% with image_width=image.image.width image_height=image.image.height %}
+                          <img src="{{ post.get_images_for_post.first.image.url }}" class="card-img-top" alt="Post Image" style="width: 100%; height: 100%; object-fit: cover;">
+                      {% endwith %}
+                      {% endwith %}
+                      {% endif %}
+                      <div class="card-body">
+                          <h5 class="card-title">@{{ post.user.username }}</h5>
+                          <p class="card-text">{{ post.description }}</p>
+                          <div class="card-text">
+                              {% for tag in post.tags.all %}
+                              <span class="badge bg-primary">#{{ tag.tag }}</span>
+                              {% endfor %}
+                              {% if post.get_images_for_post.count > 1 %}
+                              <img src="{% static '/icons/multiple-image.svg' %}" alt="SVG Image" height="30">
+                              {% endif %}
+                          </div>
+                      </div>
+                  </div>
+              </a>
+          </div>
+          {% endfor %}
+      </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "main.html" %}
+{% load static %}
+
+{% block nav %}
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+        {% if request.user.is_authenticated %}
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'home' %}">Home</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'add_post' %}">New Post</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'self_profile' %}">My Profile</a>
+        </li>
+        <li class="nav-item active">
+            <a class="nav-link" href="{% url 'logout' %}" style="color: red">Logout</a>
+        </li>
+        {% else %}
+        <li class="nav-item active">
+            <a class="nav-link" href="{% url 'login' %}" style="color: green">Login</a>
+        </li>
+        {% endif %}
+    </ul>
+</div>
+{% endblock %}
+
+
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        {% for post in object_list %}
+        <div class="col-md-8 mx-auto mb-4">
+            <a href="{% url 'post_detail' post.pk %}" class="text-decoration-none">
+                <div class="card">
+                    <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
+                        <div class="carousel-inner">
+                            {% for image in post.get_images_for_post %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <img src="{{ image.image.url }}" class="d-block w-100" alt="Image">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </a>
+                        <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </a>                
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">@{{ post.user.username }}</h5>
+                        <p class="card-text">{{ post.description }}</p>
+                        <p style="color: #007bff;">likes: {{ post.likes_count }}</p>
+                        <div class="card-text">
+                            {% for tag in post.tags.all %}
+                            <span class="badge bg-primary">#{{ tag.tag }}</span>
+                            {% endfor %}
+                            {% if post.get_images_for_post.count > 1 %}
+                            <img src="{% static '/icons/multiple-image.svg' %}" alt="SVG Image" height="30">
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+

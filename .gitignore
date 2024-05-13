@@ -1,0 +1,7 @@
+myenv/
+.idea
+.vs
+__pycache__/
+.pytest_cache
+.vscode
+todo.txt

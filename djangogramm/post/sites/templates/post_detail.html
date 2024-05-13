@@ -1,0 +1,133 @@
+{% extends "main.html" %}
+{% load static %}
+
+{% block nav %}
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'feed' %}">Feed</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'home' %}">Home</a>
+        </li>
+        {% if request.user.is_authenticated %}
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'add_post' %}">New Post</a>
+        </li>
+        {% if post.user == user %}
+        <li class="nav-item active">
+            <a class="nav-link" href="{% url 'edit_post' post.pk %}">Edit</a>
+        </li>
+        <li class="nav-item active">
+            <a class="nav-link" href="{% url 'delete_post' post.pk %}">Delete</a>
+        </li>
+        {% endif %}
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'self_profile' %}">My Profile</a>
+        </li>
+        <li class="nav-item active">
+            <a class="nav-link" href="{% url 'logout' %}" style="color: red">Logout</a>
+        </li>
+        {% else %}
+        <li class="nav-item active">
+            <a class="nav-link" href="{% url 'login' %}" style="color: green">Login</a>
+        </li>
+        {% endif %}
+    </ul>
+</div>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
+                <div class="carousel-inner">
+                    {% for image in post.get_images_for_post %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <img src="{{ image.image.url }}" class="d-block w-100" alt="Image">
+                    </div>
+                    {% endfor %}
+                </div>
+                <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </a>                
+            </div>
+            <a href="{% url 'other_profile' post.user.pk %}" class="d-flex align-items-center mt-3" style="color: black;">
+                {% if post.user.avatar %}
+                <img src="{{ post.user.avatar.url }}" alt="avatar" class="rounded-circle mr-2" style="width: 5rem; height: 5rem; object-fit: cover;">
+                {% else %}
+                <img src="{% static 'avatars/default_avatar.jpg' %}" alt="default avatar" class="rounded-circle mr-2" style="width: 5rem; height: rem; object-fit: cover;">
+                {% endif %}
+                <p class="username mb-0"><strong>@{{ post.user.username }}</strong></p>
+            </a>
+            <p>{{ post.description }}</p>
+            <p>
+                {% for tag in post.tags.all %}#{{ tag.tag }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            </p>
+            <div class="row">
+                <div class="col-md-8">
+                    <span id="like-count" style="color: #007bff;">{{ post.get_count_likes }}</span>
+                    {% if is_liked %}
+                    <button id="like-button" value="{{ post.id }}" data-url="{% url 'post_like' post.pk %}" class="btn btn-secondary">Unlike</button>      
+                    {% else %}
+                    <button id="like-button" value="{{ post.id }}" data-url="{% url 'post_like' post.pk %}" class="btn btn-primary">Like</button>      
+                    {% endif %}
+                    <a class="btn btn-success" href="{% url 'add_comment' post.pk %}">Comment</a>
+                </div>
+            </div>
+            <br/>
+            {% for comment in comments %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        {% if post.user.avatar %}
+                        <a href="{% url 'other_profile' comment.user.pk %}" class="d-flex align-items-center" style="color: black;">
+                            {% if comment.user.avatar %}
+                            <img src="{{ comment.user.avatar.url }}" alt="avatar" class="rounded-circle mr-2" style="width: 3rem; height: 3rem; object-fit: cover;">
+                            {% else %}
+                            <img src="{% static 'avatars/default_avatar.jpg' %}" alt="default avatar" class="rounded-circle mr-2" style="width: 3rem; height: 3rem; object-fit: cover;">
+                            {% endif %}
+                            <p class="username mb-0"><strong>@{{ comment.user.username }}</strong></p>
+                        </a>
+                        {% endif %}
+                        <div class="ml-auto">
+                            {% if comment.user == post.user and comment.user == request.user %}
+                            <a href="#" class="btn btn-danger">Delete</a>
+                            {% elif comment.user == request.user %}
+                            <div class="d-flex align-items-center">
+                                <a href="{% url 'edit_comment' post_id=post.id pk=comment.id %}" class="btn btn-light">Edit</a>
+                                <a href="{% url 'delete_comment' post_id=post.id pk=comment.id %}" class="btn btn-danger">Delete</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="ml-5 mt-2 mb-3">
+                        <p class="card-text">{{ comment.text }}</p>
+                    </div>
+                    <div class="row ml-5">
+                        <div class="col-md-8">
+                            <span id="like-count-{{comment.id}}" style="color: #007bff;">{{ comment.get_count_likes }}</span>
+                            {% if comment.is_liked %}
+                            <button id="like-button-{{comment.id}}" value="{{ comment.id }}" data-url="{% url 'comment_like' comment.id %}" class="btn btn-secondary ml-2">Unlike</button>      
+                            {% else %}
+                            <button id="like-button-{{comment.id}}" value="{{ comment.id }}" data-url="{% url 'comment_like' comment.id %}" class="btn btn-primary ml-2">Like</button>      
+                            {% endif %}
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            {% endfor %}                     
+        </div>
+    </div>
+</div>
+<script src="{% static 'js/post_like.js' %}"></script>
+<script src="{% static 'js/comment_like.js' %}"></script>
+{% endblock %}
